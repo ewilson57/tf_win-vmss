@@ -9,7 +9,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "win-vmss" {
   computer_name_prefix = var.prefix
   location             = azurerm_resource_group.win-vmss.location
   resource_group_name  = azurerm_resource_group.win-vmss.name
-  sku                  = "Standard_D2_v2"
+  sku                  = "Standard_DS1_v2"
   instances            = 2
   admin_username       = var.admin_username
   admin_password       = var.admin_password
