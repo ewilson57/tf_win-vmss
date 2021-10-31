@@ -29,7 +29,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "win-vmss" {
       name                                   = "internal"
       primary                                = true
       subnet_id                              = azurerm_subnet.win-vmss[1].id
-      load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.win-vmss-bpepool.id]
+      load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.win-vmss-bepool.id]
       load_balancer_inbound_nat_rules_ids    = [azurerm_lb_nat_pool.natpool.id]
     }
   }
@@ -60,7 +60,7 @@ resource "azurerm_lb" "win-vmss-lb" {
   }
 }
 
-resource "azurerm_lb_backend_address_pool" "win-vmss-bpepool" {
+resource "azurerm_lb_backend_address_pool" "win-vmss-bepool" {
   loadbalancer_id = azurerm_lb.win-vmss-lb.id
   name            = "bepool"
 }
