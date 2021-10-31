@@ -4,38 +4,6 @@ data "azurerm_shared_image" "win-iis" {
   resource_group_name = "management-rg"
 }
 
-resource "azurerm_windows_virtual_machine_scale_set" "win-vmss" {
-  name                 = var.prefix
-  computer_name_prefix = var.prefix
-  location             = azurerm_resource_group.win-vmss.location
-  resource_group_name  = azurerm_resource_group.win-vmss.name
-  sku                  = "Standard_DS1_v2"
-  instances            = 2
-  admin_username       = var.admin_username
-  admin_password       = var.admin_password
-
-  source_image_id = data.azurerm_shared_image.win-iis.id
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  network_interface {
-    name    = "${var.prefix}-nic"
-    primary = true
-
-    ip_configuration {
-      name                                   = "internal"
-      primary                                = true
-      subnet_id                              = azurerm_subnet.win-vmss[1].id
-      load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.win-vmss-bepool.id]
-      load_balancer_inbound_nat_rules_ids    = [azurerm_lb_nat_pool.natpool.id]
-    }
-  }
-  depends_on = [azurerm_lb_rule.win-vmss-lb-rule]
-}
-
 resource "azurerm_public_ip" "win-vmss-public-ip" {
   name                    = "${var.prefix}-public-ip"
   resource_group_name     = azurerm_resource_group.win-vmss.name
@@ -59,7 +27,6 @@ resource "azurerm_lb" "win-vmss-lb" {
     public_ip_address_id          = azurerm_public_ip.win-vmss-public-ip.id
   }
 }
-
 resource "azurerm_lb_backend_address_pool" "win-vmss-bepool" {
   loadbalancer_id = azurerm_lb.win-vmss-lb.id
   name            = "bepool"
@@ -94,6 +61,38 @@ resource "azurerm_lb_nat_pool" "natpool" {
   backend_port                   = 3389
   frontend_ip_configuration_name = azurerm_lb.win-vmss-lb.frontend_ip_configuration.0.name
 }
+resource "azurerm_windows_virtual_machine_scale_set" "win-vmss" {
+  name                 = var.prefix
+  computer_name_prefix = var.prefix
+  location             = azurerm_resource_group.win-vmss.location
+  resource_group_name  = azurerm_resource_group.win-vmss.name
+  sku                  = "Standard_DS1_v2"
+  instances            = 2
+  admin_username       = var.admin_username
+  admin_password       = var.admin_password
+
+  source_image_id = data.azurerm_shared_image.win-iis.id
+
+  os_disk {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
+  }
+
+  network_interface {
+    name    = "${var.prefix}-nic"
+    primary = true
+
+    ip_configuration {
+      name                                   = "internal"
+      primary                                = true
+      subnet_id                              = azurerm_subnet.win-vmss[1].id
+      load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.win-vmss-bepool.id]
+      load_balancer_inbound_nat_rules_ids    = [azurerm_lb_nat_pool.natpool.id]
+    }
+  }
+  # depends_on = [azurerm_lb_rule.win-vmss-lb-rule]
+}
+
 
 output "public_ip_addr" {
   value = azurerm_public_ip.win-vmss-public-ip.ip_address
