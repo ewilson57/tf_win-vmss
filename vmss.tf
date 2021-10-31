@@ -1,5 +1,5 @@
-data "azurerm_shared_image" "win-2019-iis" {
-  name                = "win-2019-iis"
+data "azurerm_shared_image" "win-iis" {
+  name                = "win-2022-azure-iis"
   gallery_name        = "shared_image_gallery_1"
   resource_group_name = "management-rg"
 }
@@ -14,7 +14,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "win-vmss" {
   admin_username       = var.admin_username
   admin_password       = var.admin_password
 
-  source_image_id = data.azurerm_shared_image.win-2019-iis.id
+  source_image_id = data.azurerm_shared_image.win-iis.id
 
   os_disk {
     storage_account_type = "Standard_LRS"
@@ -61,7 +61,6 @@ resource "azurerm_lb" "win-vmss-lb" {
 }
 
 resource "azurerm_lb_backend_address_pool" "win-vmss-bpepool" {
-  resource_group_name = azurerm_resource_group.win-vmss.name
   loadbalancer_id     = azurerm_lb.win-vmss-lb.id
   name                = "BackEndAddressPool"
 }
@@ -74,14 +73,12 @@ resource "azurerm_lb_probe" "win-vmss-lb-probe" {
 }
 
 resource "azurerm_lb_rule" "win-vmss-lb-rule" {
-  resource_group_name     = azurerm_resource_group.win-vmss.name
-  loadbalancer_id         = azurerm_lb.win-vmss-lb.id
-  name                    = "http"
-  protocol                = "Tcp"
-  frontend_port           = var.application_port
-  backend_port            = var.application_port
-  backend_address_pool_id = azurerm_lb_backend_address_pool.win-vmss-bpepool.id
-
+  resource_group_name            = azurerm_resource_group.win-vmss.name
+  loadbalancer_id                = azurerm_lb.win-vmss-lb.id
+  name                           = "http"
+  protocol                       = "Tcp"
+  frontend_port                  = var.application_port
+  backend_port                   = var.application_port
   frontend_ip_configuration_name = "PublicIPAddress"
   probe_id                       = azurerm_lb_probe.win-vmss-lb-probe.id
 }
